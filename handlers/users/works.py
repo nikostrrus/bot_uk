@@ -1,7 +1,9 @@
 import logging
 from aiogram.dispatcher.filters import Command
 from aiogram.types import Message, CallbackQuery
+from aiogram import types
 from loader import dp, bot
+from aiogram.dispatcher import FSMContext
 import aioschedule
 import asyncio
 import keybords.inline.choice_buttons as key
@@ -9,6 +11,19 @@ import keybords.inline.callback_datas as call_datas
 from bd.sql import *
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import erp
+from aiogram.dispatcher.filters.state import State, StatesGroup
+
+class pictures(StatesGroup):
+    photo = State()
+    name = State()
+    deportament = State()
+    mission = State()
+
+class datas(StatesGroup):
+    text = State()
+    name = State()
+    deportament = State()
+    mission = State()
 
 # Кнопка старт, аутентифицирует человека, отправляет клавиатуру
 @dp.message_handler(Command('start'))
@@ -36,11 +51,17 @@ async def helo_key(call: CallbackQuery, callback_data: dict):
     await call.answer()
 
 # Кнопка миссии
-@dp.callback_query_handler(call_datas.mission_callback.filter(item_mission='miss'))
+@dp.callback_query_handler(call_datas.mission_callback.filter(item_mission='miss'), state=None)
 async def mission_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
-    bal = (await check_point(call.message.chat.id))[0][0]
-    await call.message.edit_text(f'У тебя сейчас {bal} 💎')
+    missions = (await get_random_mission())
+    print(missions[0][2])
+    await set_last_mission(call.message.chat.id, str(missions[0][2]))
+    if missions[0][1] == 2:
+        await pictures.photo.set()
+    else:
+        await datas.text.set()
+    await call.message.edit_text(missions[0][2], reply_markup=key.back_keyboard)
     await call.answer()
 
 # Кнопка мои баллы
@@ -57,3 +78,28 @@ async def back_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     await call.message.edit_text(f'Перед тобой список миссий за которые ты получишь 💎\nВыполняй их в любом порядке, а если захочешь посмотреть количество баллов, жми кнопку «Мои баллы»', reply_markup=key.mission_keyboard)
     await call.answer()
+
+@dp.message_handler(content_types=['photo'], state=pictures.photo)
+async def load_photo(message: types.Message, state: FSMContext):
+    person = (await get_users(message.chat.id))
+    async with state.proxy() as data:
+        data['photo'] = message.photo[0].file_id
+        data['name'] = person[0]
+        data['deportament'] = person[1]
+        data['mission'] = person[2]
+    async with state.proxy() as data:
+        await bot.send_photo(225923687, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
+
+    await state.finish()
+
+@dp.message_handler(content_types=['text'], state=datas.text)
+async def load_text(message: types.Message, state: FSMContext):
+    person = (await get_users(message.chat.id))
+    async with state.proxy() as data:
+        data['text'] = message.text
+        data['name'] = person[0]
+        data['deportament'] = person[1]
+        data['mission'] = person[2]
+    async with state.proxy() as data:
+        await bot.send_message(225923687, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
+    await state.finish()

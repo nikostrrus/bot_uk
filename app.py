@@ -1,5 +1,4 @@
 from loader import bot, db_start, AuthMiddleware
-import asyncio
 
 
 async def on_shutdown(dp):
