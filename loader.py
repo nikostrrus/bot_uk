@@ -15,6 +15,7 @@ class AuthMiddleware(BaseMiddleware):
     async def on_process_message(self, message: types.Message, data: dict):
         if not await erp.get_id_erp(message.from_user.id):
             raise CancelHandler()
+        
 
 bot = Bot(config.BOT_TOKEN, parse_mode='HTML')
 storage = MemoryStorage()

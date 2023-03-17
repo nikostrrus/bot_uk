@@ -55,13 +55,12 @@ async def helo_key(call: CallbackQuery, callback_data: dict):
 async def mission_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     missions = (await get_random_mission())
-    print(missions[0][2])
     await set_last_mission(call.message.chat.id, str(missions[0][2]))
-    if missions[0][1] == 2:
+    if missions[0][1] == '2':
         await pictures.photo.set()
     else:
         await datas.text.set()
-    await call.message.edit_text(missions[0][2], reply_markup=key.back_keyboard)
+    await call.message.edit_text(str(missions[0][2]).replace('"',''), reply_markup=key.back_keyboard)
     await call.answer()
 
 # Кнопка мои баллы
@@ -84,11 +83,11 @@ async def load_photo(message: types.Message, state: FSMContext):
     person = (await get_users(message.chat.id))
     async with state.proxy() as data:
         data['photo'] = message.photo[0].file_id
-        data['name'] = person[0]
-        data['deportament'] = person[1]
-        data['mission'] = person[2]
+        data['name'] = person[0][0]
+        data['deportament'] = person[0][1]
+        data['mission'] = person[0][2]
     async with state.proxy() as data:
-        await bot.send_photo(225923687, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
+        await bot.send_photo(-1001905922253, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
 
     await state.finish()
 
@@ -97,9 +96,9 @@ async def load_text(message: types.Message, state: FSMContext):
     person = (await get_users(message.chat.id))
     async with state.proxy() as data:
         data['text'] = message.text
-        data['name'] = person[0]
-        data['deportament'] = person[1]
-        data['mission'] = person[2]
+        data['name'] = person[0][0]
+        data['deportament'] = person[0][1]
+        data['mission'] = person[0][2]
     async with state.proxy() as data:
-        await bot.send_message(225923687, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
+        await bot.send_message(-1001905922253, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nНаписал: {message.text}')
     await state.finish()

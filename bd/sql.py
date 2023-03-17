@@ -62,7 +62,7 @@ async def get_users(tel_id):
     with sq.connect('sutrudnig.db') as con:
         cur = con.cursor()
 
-        cur.execute(f'SELECT name, deportament FROM employees WHERE user_id={tel_id}')
+        cur.execute(f'SELECT name, deportament, last_mission FROM employees WHERE user_id={tel_id}')
         return cur.fetchall()
     
 # Меняем последнию мессию которая выпола персоне
