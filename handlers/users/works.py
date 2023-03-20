@@ -4,8 +4,6 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import types
 from loader import dp, bot
 from aiogram.dispatcher import FSMContext
-import aioschedule
-import asyncio
 import keybords.inline.choice_buttons as key
 import keybords.inline.callback_datas as call_datas
 from bd.sql import *
@@ -55,7 +53,7 @@ async def helo_key(call: CallbackQuery, callback_data: dict):
 async def mission_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     missions = (await get_random_mission())
-    await set_last_mission(call.message.chat.id, str(missions[0][2]))
+    await set_last_mission(call.message.chat.id, missions[0][1], call.message.message_id)
     if missions[0][1] == '2':
         await pictures.photo.set()
     else:
@@ -78,27 +76,50 @@ async def back_key(call: CallbackQuery, callback_data: dict):
     await call.message.edit_text(f'Перед тобой список миссий за которые ты получишь 💎\nВыполняй их в любом порядке, а если захочешь посмотреть количество баллов, жми кнопку «Мои баллы»', reply_markup=key.mission_keyboard)
     await call.answer()
 
+@dp.message_handler(lambda message: not message.photo, state=pictures.photo)
+async def check_photo(message: types.Message):
+    await message.reply('Отправь фото')
+
 @dp.message_handler(content_types=['photo'], state=pictures.photo)
 async def load_photo(message: types.Message, state: FSMContext):
     person = (await get_users(message.chat.id))
+    mission = (await get_mission(person[0][2]))
     async with state.proxy() as data:
         data['photo'] = message.photo[0].file_id
         data['name'] = person[0][0]
         data['deportament'] = person[0][1]
-        data['mission'] = person[0][2]
+        data['mission'] = mission[0][2]
     async with state.proxy() as data:
         await bot.send_photo(-1001905922253, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
-
     await state.finish()
+    await up_point(message.chat.id, mission[0][3])
+    await message.delete()
+    await bot.delete_message(message.from_user.id, person[0][3])
+    await message.answer(f'Класс! Засчитываем и получи свои {mission[0][3]} 💎', reply_markup=key.back_keyboard)
 
-@dp.message_handler(content_types=['text'], state=datas.text)
+@dp.message_handler(content_types=types.ContentType.ANY, state=datas.text)
 async def load_text(message: types.Message, state: FSMContext):
-    person = (await get_users(message.chat.id))
-    async with state.proxy() as data:
-        data['text'] = message.text
-        data['name'] = person[0][0]
-        data['deportament'] = person[0][1]
-        data['mission'] = person[0][2]
-    async with state.proxy() as data:
-        await bot.send_message(-1001905922253, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nНаписал: {message.text}')
+    if message.content_type != 'text':
+        await message.reply('Пожалуйста, отправляйте только текстовые сообщения')
+    else:
+        person = (await get_users(message.chat.id))
+        mission = (await get_mission(person[0][2]))
+        async with state.proxy() as data:
+            data['text'] = message.text
+            data['name'] = person[0][0]
+            data['deportament'] = person[0][1]
+            data['mission'] = mission[0][2]
+        async with state.proxy() as data:
+            await bot.send_message(-1001905922253, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nНаписал: {message.text}')
+        await state.finish()
+        await up_point(message.chat.id, mission[0][3])
+        await message.delete()
+        await bot.delete_message(message.from_user.id, person[0][3])
+        await message.answer(f'Класс! Засчитываем и получи свои {mission[0][3]} 💎', reply_markup=key.back_keyboard)
+
+@dp.callback_query_handler(call_datas.back_callback.filter(item_back='back'), state='*')
+async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
+    logging.info(f'call = {callback_data}')
+    await call.message.edit_text(f'Перед тобой список миссий за которые ты получишь 💎\nВыполняй их в любом порядке, а если захочешь посмотреть количество баллов, жми кнопку «Мои баллы»', reply_markup=key.mission_keyboard)
+    await call.answer()
     await state.finish()

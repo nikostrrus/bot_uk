@@ -13,7 +13,8 @@ async def db_start():
         name TEXT,
         deportament TEXT,
         point INTEGER,
-        last_mission TEXT)
+        last_mission INTEGER,
+        last_message INTEGER)
         ''')
     
     cur.execute('''CREATE TABLE IF NOT EXISTS mission(
@@ -30,7 +31,7 @@ async def create_profile(user_id, username, deportament):
     user = cur.execute("SELECT 1 FROM employees WHERE user_id == '{key}'".format(key=user_id)).fetchone()
     
     if not user:
-        cur.execute('INSERT INTO employees VALUES(?, ?, ?, ?, ?)', (user_id, username, deportament, 0, ''))
+        cur.execute('INSERT INTO employees VALUES(?, ?, ?, ?, ?, ?)', (user_id, username, deportament, 0, '', 0))
         db.commit()
 
 # Вытаскиваем все о клиенте
@@ -62,13 +63,27 @@ async def get_users(tel_id):
     with sq.connect('sutrudnig.db') as con:
         cur = con.cursor()
 
-        cur.execute(f'SELECT name, deportament, last_mission FROM employees WHERE user_id={tel_id}')
+        cur.execute(f'SELECT name, deportament, last_mission, last_message FROM employees WHERE user_id={tel_id}')
         return cur.fetchall()
     
 # Меняем последнию мессию которая выпола персоне
-async def set_last_mission(tel_id, last_mission):
+async def set_last_mission(tel_id, last_mission, last_message):
     with sq.connect('sutrudnig.db') as con:
         cur = con.cursor()
 
-        cur.execute(f'UPDATE employees SET last_mission={last_mission} WHERE user_id={tel_id}')
+        cur.execute(f'UPDATE employees SET last_mission={last_mission}, last_message={last_message} WHERE user_id={tel_id}')
+        return cur.fetchall()
+
+# Повышаем количество очков
+async def up_point(tel_id, point):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'UPDATE employees SET point=point+{point} WHERE user_id = {tel_id}')
+        return cur.fetchall()
+
+# Возвращает миссию по ид
+async def get_mission(id_mission):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'SELECT * FROM mission WHERE id_mission={id_mission}')
         return cur.fetchall()
