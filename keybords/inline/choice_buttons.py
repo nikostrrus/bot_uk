@@ -44,3 +44,39 @@ point_back_keyboard = InlineKeyboardMarkup(
         ]
     ]
 )
+
+main_menu_keybord = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Посмотреть все задания', callback_data=key.main_menu_callback.new(item_main_menu='all_mission')),
+        ],
+        [
+            InlineKeyboardButton(text='Топ 10 участников', callback_data=key.main_menu_callback.new(item_main_menu='top_ten')),
+        ],
+        [
+            InlineKeyboardButton(text='Изменить очки участников', callback_data=key.main_menu_callback.new(item_main_menu='write_point')),
+        ],
+    ]
+)
+
+all_mis_keyboard = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Добавить задания', callback_data=key.main_menu_callback.new(item_main_menu='add')),
+        ],
+        [
+            InlineKeyboardButton(text='Показать все задания', callback_data=key.main_menu_callback.new(item_main_menu='show_all')),
+        ],
+        [
+            InlineKeyboardButton(text='Назад', callback_data=key.main_menu_callback.new(item_main_menu='back')),
+        ],
+    ]
+)
+
+all_mis_back_keyboard = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Назад', callback_data=key.main_back_callback.new(item_main_back='back'))
+        ]
+    ]
+)

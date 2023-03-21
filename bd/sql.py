@@ -94,3 +94,17 @@ async def down_point(name, point):
         cur = con.cursor()
         cur.execute(f'UPDATE employees SET point=point-{int(point)} WHERE name="{name}"')
         return cur.fetchall()
+
+# возвращает все миссии
+async def get_all_mission():
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'SELECT data FROM mission')
+        return cur.fetchall()
+
+# Добавляем миссию
+async def add_mission(type, text, point):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'INSERT INTO mission (type, data, point) VALUES({type}, "{text}", {point})')
+        return cur.fetchall()

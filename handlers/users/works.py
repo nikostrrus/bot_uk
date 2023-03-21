@@ -2,7 +2,7 @@ import logging
 from aiogram.dispatcher.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram import types
-from loader import dp, bot
+from loader import dp, bot, Dispatcher
 from aiogram.dispatcher import FSMContext
 import keybords.inline.choice_buttons as key
 import keybords.inline.callback_datas as call_datas
@@ -23,9 +23,17 @@ class datas(StatesGroup):
     deportament = State()
     mission = State()
 
+class quests(StatesGroup):
+    type = State()
+    text = State()
+    point = State()
+
 # Кнопка старт, аутентифицирует человека, отправляет клавиатуру
 @dp.message_handler(Command('start'))
 async def show_menu(message: Message):
+    if message.chat.id == -1001905922253:
+        await message.answer('Это админка, тут можете менять задания(добавлять, удалять), так же регулировать очки участников', reply_markup=key.main_menu_keybord)
+        return ''
     text = '''🤝 Если ты здесь, значит точно уверен, что PR — дело общее! 
 
 На 2023 год у нас есть для тебя много классных миссий, выполняя которые ты можешь получить баллы в свою копилку и обменять их на крутой мерч.'''
@@ -120,6 +128,14 @@ async def load_text(message: types.Message, state: FSMContext):
         await bot.delete_message(message.from_user.id, person[0][3])
         await message.answer(f'Класс! Засчитываем и получи свои {mission[0][3]} 💎', reply_markup=key.back_keyboard)
 
+# Кнопка назад
+@dp.callback_query_handler(call_datas.main_back_callback.filter(item_main_back='back'), state=quests)
+async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
+    logging.info(f'call = {callback_data}')
+    await call.message.edit_text('Тут вы можете удалить и добавить новое задание', reply_markup=key.all_mis_keyboard)
+    await call.answer()
+    await state.finish()
+
 # Выход из машины состояния
 @dp.callback_query_handler(call_datas.back_callback.filter(item_back='back'), state='*')
 async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
@@ -132,8 +148,12 @@ async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
 @dp.callback_query_handler(call_datas.point_back_callback.filter(item_point_back='count'))
 async def counts_point(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
+    if call.message.caption:
+        mess = call.message.caption
+    else:
+        mess = call.message.text
+        await call.message.edit_text(mess)
     await bot.answer_callback_query(callback_query_id=call.id, text='Балы засчитаны', show_alert=True)
-    await call.message.edit_text(call.message.text)
     await call.answer()
 
 
@@ -141,7 +161,77 @@ async def counts_point(call: CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(call_datas.point_back_callback.filter(item_point_back='uncount'))
 async def counts_point(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
-    await down_point(call.message.text.split('\n')[0].split('Кто прислал: ')[1], call.message.text.split('\n')[-1][-1])
+    if call.message.caption:
+        mess = call.message.caption
+    else:
+        mess = call.message.text
+        await call.message.edit_text(mess)
+    await down_point(mess.split('\n')[0].split('Кто прислал: ')[1], mess.split('\n')[-1][-1])
     await bot.answer_callback_query(callback_query_id=call.id, text='Балы не засчитаны', show_alert=True)
-    await call.message.edit_text(call.message.text)
+    await call.answer()
+
+# Смотрим все задания
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='all_mission'))
+async def under_menu(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    await call.message.edit_text('Тут вы можете удалить и добавить новое задание', reply_markup=key.all_mis_keyboard)
+    await call.answer()
+
+# Добавить задания
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='add'))
+async def under_menu(call: CallbackQuery, callback_data: dict, state: FSMContext):
+    logging.info(f'call = {callback_data}')
+    await call.message.edit_text('Тут добавляется новое задание нужно вести 3 пункта необходимых для вноса задания в базу:\n1. ВЫбрать что это будет фотои ли текст и написать цифрой, текст - 1, фото - 2\n2. Текст миссии фажно не использовать " уовычки\n3. Необходимо написать количество очков за задание\n4. Кнопка назад создана для отменения отправки задания в базу, отменяет от слова совсем\nУдачи))', reply_markup=key.all_mis_back_keyboard)
+    await quests.type.set()
+
+# Отлавливаем не правильную передачу типа миссии 
+@dp.message_handler(lambda message: not message.text.isdigit() and 0 < int(message.text) < 3, state=quests.type)
+async def check_photo(message: Message, state: FSMContext):
+    await message.reply('Отправь верное число')
+
+# Отлавливаем правильную передачу числа
+@dp.message_handler(state=quests.type)
+async def load_type(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['type'] = message.text
+    await message.answer('Хорошо теперь пришлите текст задания')
+    await quests.next()
+
+# Отлавливаем текст мессии
+@dp.message_handler(state=quests.text)
+async def load_text(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['text'] = message.text
+    await message.answer('Хорошо ведите зачисляемые очки')
+    await quests.next()
+
+# Отлавливаем не правильную передачу очков за миссию
+@dp.message_handler(lambda message: not message.text.isdigit(), state=quests.point)
+async def check_photo(message: Message, state: FSMContext):
+    await message.reply('Отправь число')
+
+# Отлавливаем текст мессии
+@dp.message_handler(state=quests.point)
+async def load_point(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['point'] = int(message.text)
+    async with state.proxy() as data:
+        await add_mission(data['type'], data['text'], int(data['point']))
+    await message.answer('Мисссия была добавлена')
+    await state.finish()
+
+# Показать все миссии
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='show_all'))
+async def all_mission(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    all_mis = (await get_all_mission())
+    for item in all_mis:
+        await bot.send_message(-1001905922253, item[0])
+    await call.answer()
+
+# Кнопка назад
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='back'))
+async def back_key(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    await call.message.edit_text('Это админка, тут можете менять задания(добавлять, удалять), так же регулировать очки участников', reply_markup=key.main_menu_keybord)
     await call.answer()
