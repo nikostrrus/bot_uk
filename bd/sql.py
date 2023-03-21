@@ -87,3 +87,10 @@ async def get_mission(id_mission):
         cur = con.cursor()
         cur.execute(f'SELECT * FROM mission WHERE id_mission={id_mission}')
         return cur.fetchall()
+
+# Отнимаем очки
+async def down_point(name, point):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'UPDATE employees SET point=point-{int(point)} WHERE name="{name}"')
+        return cur.fetchall()

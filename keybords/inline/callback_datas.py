@@ -3,6 +3,7 @@ from aiogram.utils.callback_data import CallbackData
 menu_callback = CallbackData('menu', 'item_menu')
 helo_callback = CallbackData('helo', 'item_helo')
 mission_callback = CallbackData('mission', 'item_mission')
+point_back_callback = CallbackData('answer', 'item_point_back')
 
 back_callback = CallbackData('back', 'item_back')
 

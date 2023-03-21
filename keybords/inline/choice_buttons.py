@@ -35,3 +35,12 @@ back_keyboard = InlineKeyboardMarkup(
         ]
     ]
 )
+
+point_back_keyboard = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Засчитать очки', callback_data=key.point_back_callback.new(item_point_back='count')),
+            InlineKeyboardButton(text='Не засчитать очки', callback_data=key.point_back_callback.new(item_point_back='uncount')),
+        ]
+    ]
+)

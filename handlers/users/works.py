@@ -76,10 +76,12 @@ async def back_key(call: CallbackQuery, callback_data: dict):
     await call.message.edit_text(f'Перед тобой список миссий за которые ты получишь 💎\nВыполняй их в любом порядке, а если захочешь посмотреть количество баллов, жми кнопку «Мои баллы»', reply_markup=key.mission_keyboard)
     await call.answer()
 
+# Если вдруг пришла не фото
 @dp.message_handler(lambda message: not message.photo, state=pictures.photo)
 async def check_photo(message: types.Message):
     await message.reply('Отправь фото')
 
+# обробатывает пришедгее фото
 @dp.message_handler(content_types=['photo'], state=pictures.photo)
 async def load_photo(message: types.Message, state: FSMContext):
     person = (await get_users(message.chat.id))
@@ -90,13 +92,14 @@ async def load_photo(message: types.Message, state: FSMContext):
         data['deportament'] = person[0][1]
         data['mission'] = mission[0][2]
     async with state.proxy() as data:
-        await bot.send_photo(-1001905922253, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}')
+        await bot.send_photo(-1001905922253, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nОчков за задание: {mission[0][3]}', reply_markup=key.point_back_keyboard)
     await state.finish()
     await up_point(message.chat.id, mission[0][3])
     await message.delete()
     await bot.delete_message(message.from_user.id, person[0][3])
     await message.answer(f'Класс! Засчитываем и получи свои {mission[0][3]} 💎', reply_markup=key.back_keyboard)
 
+# Обработка текста и проверка на то что в нутри действительно лежит текст
 @dp.message_handler(content_types=types.ContentType.ANY, state=datas.text)
 async def load_text(message: types.Message, state: FSMContext):
     if message.content_type != 'text':
@@ -110,16 +113,35 @@ async def load_text(message: types.Message, state: FSMContext):
             data['deportament'] = person[0][1]
             data['mission'] = mission[0][2]
         async with state.proxy() as data:
-            await bot.send_message(-1001905922253, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nНаписал: {message.text}')
+            await bot.send_message(-1001905922253, f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nНаписал: {message.text}\nОчков за задание: {mission[0][3]}', reply_markup=key.point_back_keyboard)
         await state.finish()
         await up_point(message.chat.id, mission[0][3])
         await message.delete()
         await bot.delete_message(message.from_user.id, person[0][3])
         await message.answer(f'Класс! Засчитываем и получи свои {mission[0][3]} 💎', reply_markup=key.back_keyboard)
 
+# Выход из машины состояния
 @dp.callback_query_handler(call_datas.back_callback.filter(item_back='back'), state='*')
 async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
     logging.info(f'call = {callback_data}')
     await call.message.edit_text(f'Перед тобой список миссий за которые ты получишь 💎\nВыполняй их в любом порядке, а если захочешь посмотреть количество баллов, жми кнопку «Мои баллы»', reply_markup=key.mission_keyboard)
     await call.answer()
     await state.finish()
+
+# Засчитываем очки
+@dp.callback_query_handler(call_datas.point_back_callback.filter(item_point_back='count'))
+async def counts_point(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    await bot.answer_callback_query(callback_query_id=call.id, text='Балы засчитаны', show_alert=True)
+    await call.message.edit_text(call.message.text)
+    await call.answer()
+
+
+# Убираем очки
+@dp.callback_query_handler(call_datas.point_back_callback.filter(item_point_back='uncount'))
+async def counts_point(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    await down_point(call.message.text.split('\n')[0].split('Кто прислал: ')[1], call.message.text.split('\n')[-1][-1])
+    await bot.answer_callback_query(callback_query_id=call.id, text='Балы не засчитаны', show_alert=True)
+    await call.message.edit_text(call.message.text)
+    await call.answer()
