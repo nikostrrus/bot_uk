@@ -150,6 +150,7 @@ async def counts_point(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     if call.message.caption:
         mess = call.message.caption
+        #await call.message.edit_text(mess)
     else:
         mess = call.message.text
         await call.message.edit_text(mess)
@@ -163,6 +164,7 @@ async def counts_point(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     if call.message.caption:
         mess = call.message.caption
+        #await call.message.edit_text(mess)
     else:
         mess = call.message.text
         await call.message.edit_text(mess)
@@ -235,3 +237,12 @@ async def back_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     await call.message.edit_text('Это админка, тут можете менять задания(добавлять, удалять), так же регулировать очки участников', reply_markup=key.main_menu_keybord)
     await call.answer()
+
+# топ 10 участников
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='top_ten'))
+async def top_ten(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    top = (await top_tens())
+    for item in top:
+        await bot.send_message(-1001905922253, f'Участник: {item[1]}\nКакой отдел: {item[2]}\nСколько очков: {item[3]}')
+

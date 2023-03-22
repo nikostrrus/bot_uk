@@ -108,3 +108,10 @@ async def add_mission(type, text, point):
         cur = con.cursor()
         cur.execute(f'INSERT INTO mission (type, data, point) VALUES({type}, "{text}", {point})')
         return cur.fetchall()
+
+# Топ 10 Сотрудников
+async def top_tens():
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute('SELECT * FROM employees ORDER BY point DESC LIMIT 10')
+        return cur.fetchall()
