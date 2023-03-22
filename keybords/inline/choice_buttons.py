@@ -76,7 +76,23 @@ all_mis_keyboard = InlineKeyboardMarkup(
 all_mis_back_keyboard = InlineKeyboardMarkup(
     inline_keyboard = [
         [
-            InlineKeyboardButton(text='Назад', callback_data=key.main_back_callback.new(item_main_back='back'))
+            InlineKeyboardButton(text='Назад', callback_data=key.main_back_callback.new(item_main_bac='bac'))
+        ]
+    ]
+)
+
+all_mis_back_keyboards = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Назад', callback_data=key.main_back_callbacks.new(item_main_backs='backs'))
+        ]
+    ]
+)
+
+delete_mission_keyboards = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Удалить', callback_data=key.delete_mission_callbacks.new(item_delete='del'))
         ]
     ]
 )

@@ -115,3 +115,24 @@ async def top_tens():
         cur = con.cursor()
         cur.execute('SELECT * FROM employees ORDER BY point DESC LIMIT 10')
         return cur.fetchall()
+
+# Изменить очки
+async def edit_point(name, point):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'UPDATE employees SET point={int(point)} WHERE name="{name}"')
+        return cur.fetchall()
+
+# Проверяем наличие сотрудника
+async def search_employs(name):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'SELECT * FROM employees WHERE name="{name}"')
+        return cur.fetchall()
+    
+# Удаление миссий из таблицы
+async def del_mission(text):
+    with sq.connect('sutrudnig.db') as con:
+        cur = con.cursor()
+        cur.execute(f'DELETE FROM mission WHERE data="{text}"')
+        return cur.fetchall()

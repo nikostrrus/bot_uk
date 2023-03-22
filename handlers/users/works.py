@@ -28,6 +28,10 @@ class quests(StatesGroup):
     text = State()
     point = State()
 
+class ed_point(StatesGroup):
+    name = State()
+    point = State()
+
 # Кнопка старт, аутентифицирует человека, отправляет клавиатуру
 @dp.message_handler(Command('start'))
 async def show_menu(message: Message):
@@ -129,10 +133,18 @@ async def load_text(message: types.Message, state: FSMContext):
         await message.answer(f'Класс! Засчитываем и получи свои {mission[0][3]} 💎', reply_markup=key.back_keyboard)
 
 # Кнопка назад
-@dp.callback_query_handler(call_datas.main_back_callback.filter(item_main_back='back'), state=quests)
+@dp.callback_query_handler(call_datas.main_back_callback.filter(item_main_bac='bac'), state=quests)
 async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
     logging.info(f'call = {callback_data}')
     await call.message.edit_text('Тут вы можете удалить и добавить новое задание', reply_markup=key.all_mis_keyboard)
+    await call.answer()
+    await state.finish()
+
+# Кнопка назад
+@dp.callback_query_handler(call_datas.main_back_callbacks.filter(item_main_backs='backs'), state=ed_point)
+async def back_key(call: CallbackQuery, callback_data: dict, state: FSMContext):
+    logging.info(f'call = {callback_data}')
+    await call.message.edit_text(f'Перед тобой список миссий за которые ты получишь 💎\nВыполняй их в любом порядке, а если захочешь посмотреть количество баллов, жми кнопку «Мои баллы»', reply_markup=key.mission_keyboard)
     await call.answer()
     await state.finish()
 
@@ -150,13 +162,12 @@ async def counts_point(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     if call.message.caption:
         mess = call.message.caption
-        #await call.message.edit_text(mess)
+        await call.message.edit_caption(mess)
     else:
         mess = call.message.text
         await call.message.edit_text(mess)
     await bot.answer_callback_query(callback_query_id=call.id, text='Балы засчитаны', show_alert=True)
     await call.answer()
-
 
 # Убираем очки
 @dp.callback_query_handler(call_datas.point_back_callback.filter(item_point_back='uncount'))
@@ -164,7 +175,7 @@ async def counts_point(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     if call.message.caption:
         mess = call.message.caption
-        #await call.message.edit_text(mess)
+        await call.message.edit_caption(mess)
     else:
         mess = call.message.text
         await call.message.edit_text(mess)
@@ -228,7 +239,7 @@ async def all_mission(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     all_mis = (await get_all_mission())
     for item in all_mis:
-        await bot.send_message(-1001905922253, item[0])
+        await bot.send_message(-1001905922253, f'{item[0]}', reply_markup=key.delete_mission_keyboards)
     await call.answer()
 
 # Кнопка назад
@@ -245,4 +256,44 @@ async def top_ten(call: CallbackQuery, callback_data: dict):
     top = (await top_tens())
     for item in top:
         await bot.send_message(-1001905922253, f'Участник: {item[1]}\nКакой отдел: {item[2]}\nСколько очков: {item[3]}')
+    
+    await call.answer()
 
+# Изменяем количество очков
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='write_point'))
+async def write_point(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call{callback_data}')
+    await call.message.edit_text('Тут необходимо:\n1. Полное ФИО участника у которого необходимо поменять очки\n2. Вессти очки на которое измениться его текущие очки', reply_markup=key.all_mis_back_keyboards)
+    await ed_point.name.set()
+    await call.answer()
+    
+# Отлавливаем имя и проверяем на наличие его в бд
+@dp.message_handler(state=ed_point.name)
+async def load_name_for_edit_point(message: Message, state: FSMContext):
+    if (await search_employs(message.text)):
+        async with state.proxy() as data:
+            data['name'] = message.text
+        await ed_point.next()
+        await bot.send_message(-1001905922253, f'Отлично теперь пришли количество очков')
+    else:
+        await message.answer('Вы велли не правильное имя сотрудника, повторите ввод')
+
+@dp.message_handler(lambda message: not message.text.isdigit(), state=ed_point.point)
+async def check_photo(message: Message, state: FSMContext):
+    await message.reply('Отправь число')
+
+# Отлавливаем текст мессии
+@dp.message_handler(state=ed_point.point)
+async def load_point_for_edit_point(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        await edit_point(data['name'], message.text)
+        await bot.send_message(-1001905922253, f'{data["name"]} было установлино количество очков {message.text}')
+    await state.finish()
+
+# Удаление миссий
+@dp.callback_query_handler(call_datas.delete_mission_callbacks.filter(item_delete='del'))
+async def del_mis(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call{callback_data}')
+    await del_mission(call.message.text)
+    await call.message.edit_text(f'Задание удалено: {call.message.text}')
+    await call.answer()
