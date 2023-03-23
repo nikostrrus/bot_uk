@@ -1,4 +1,6 @@
 import sqlite3 as sq
+import pandas as pd 
+
 
 # Создание бд
 async def db_start():
@@ -136,3 +138,9 @@ async def del_mission(text):
         cur = con.cursor()
         cur.execute(f'DELETE FROM mission WHERE data="{text}"')
         return cur.fetchall()
+
+# Выгружает данные в ексель
+async def unloading_from_database():
+    with sq.connect('sutrudnig.db') as con:
+        df = pd.read_sql('SELECT user_id, name, deportament, point FROM employees ORDER BY point DESC', con)
+        df.to_excel(r'result.xlsx', index=False)

@@ -253,10 +253,8 @@ async def back_key(call: CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='top_ten'))
 async def top_ten(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
-    top = (await top_tens())
-    for item in top:
-        await bot.send_message(-1001905922253, f'Участник: {item[1]}\nКакой отдел: {item[2]}\nСколько очков: {item[3]}')
-    
+    await unloading_from_database()
+    await bot.send_document(-1001905922253, open('result.xlsx', 'rb'))
     await call.answer()
 
 # Изменяем количество очков

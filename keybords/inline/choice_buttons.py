@@ -51,7 +51,7 @@ main_menu_keybord = InlineKeyboardMarkup(
             InlineKeyboardButton(text='Посмотреть все задания', callback_data=key.main_menu_callback.new(item_main_menu='all_mission')),
         ],
         [
-            InlineKeyboardButton(text='Топ 10 участников', callback_data=key.main_menu_callback.new(item_main_menu='top_ten')),
+            InlineKeyboardButton(text='Показать всех участников в exel', callback_data=key.main_menu_callback.new(item_main_menu='top_ten')),
         ],
         [
             InlineKeyboardButton(text='Изменить очки участников', callback_data=key.main_menu_callback.new(item_main_menu='write_point')),
