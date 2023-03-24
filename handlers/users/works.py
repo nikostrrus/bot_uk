@@ -65,7 +65,7 @@ async def helo_key(call: CallbackQuery, callback_data: dict):
 async def mission_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     missions = (await get_random_mission())
-    await set_last_mission(call.message.chat.id, missions[0][1], call.message.message_id)
+    await set_last_mission(call.message.chat.id, missions[0][0], call.message.message_id)
     if missions[0][1] == '2':
         await pictures.photo.set()
     else:
@@ -102,7 +102,7 @@ async def load_photo(message: types.Message, state: FSMContext):
         data['photo'] = message.photo[0].file_id
         data['name'] = person[0][0]
         data['deportament'] = person[0][1]
-        data['mission'] = mission[0][2]
+        data["mission"] = mission[0][2]
     async with state.proxy() as data:
         await bot.send_photo(-1001905922253, data['photo'], f'Кто прислал: {data["name"]}\nИз какого отдела: {data["deportament"]}\nНа какое задание: {data["mission"]}\nОчков за задание: {mission[0][3]}', reply_markup=key.point_back_keyboard)
     await state.finish()
