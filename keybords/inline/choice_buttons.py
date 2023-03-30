@@ -4,7 +4,7 @@ import keybords.inline.callback_datas as key
 menu_keyboard = InlineKeyboardMarkup(
     inline_keyboard = [
         [
-            InlineKeyboardButton(text='Продолжить? Любые слова))', callback_data=key.menu_callback.new(item_menu='next')),
+            InlineKeyboardButton(text='Продолжить', callback_data=key.menu_callback.new(item_menu='next')),
         ],
     ]
 )
