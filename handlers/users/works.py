@@ -38,9 +38,9 @@ async def show_menu(message: Message):
     if message.chat.id == -1001905922253:
         await message.answer('Это админка, тут можете менять задания(добавлять, удалять), так же регулировать очки участников', reply_markup=key.main_menu_keybord)
         return ''
-    text = '''🤝 Если ты здесь, значит точно уверен, что PR — дело общее! 
-
-На 2023 год у нас есть для тебя много классных миссий, выполняя которые ты можешь получить баллы в свою копилку и обменять их на крутой мерч.'''
+    text = '''🤝 Приветствуем вас в геймификации по УД в МКЖД! 
+    Выполняй задания и копи баллы! 
+    Обменивайбаллы на призы!'''
     await message.answer(text, reply_markup=key.menu_keyboard)
     response = await erp.get_id_erp(message.from_user.id)
     await create_profile(message.from_user.id, response[0], response[1])
@@ -50,7 +50,12 @@ async def show_menu(message: Message):
 async def helo_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     emp = (await sel_emploes(call.message.chat.id))[0][0]
-    await call.message.edit_text(f'Ты в команде, {emp} 😎\nПриступим к выполнению миссий', reply_markup=key.helo_keyboard)
+    await call.message.edit_text(f'''Ты в команде, {emp} 😎\nПриступим к выполнению заданий
+💎1. За каждое еженедельное задание вы получаете 100 баллов. В сумме за выполнение всех активностей можно получить максимум 1200 баллов.
+
+💎2. За передачу контактов вы получаете 300 баллов за старшего по дому и 150 баллов за инициативного жителя.
+
+💎3. За сбор протокола вам начисляется 2000 баллов. ''', reply_markup=key.helo_keyboard)
     await call.answer()
     
 # Кнопка для помощи
@@ -61,6 +66,18 @@ async def helo_key(call: CallbackQuery, callback_data: dict):
     await call.answer()
 
 # Кнопка миссии
+'''@dp.callback_query_handler(call_datas.mission_callback.filter(item_mission='miss'), state=None)
+async def mission_key(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    missions = (await get_random_mission())
+    await set_last_mission(call.message.chat.id, missions[0][0], call.message.message_id)
+    if missions[0][1] == '2':
+        await pictures.photo.set()
+    else:
+        await datas.text.set()
+    await call.message.edit_text(str(missions[0][2]).replace('"',''), reply_markup=key.back_keyboard)
+    await call.answer()'''
+
 @dp.callback_query_handler(call_datas.mission_callback.filter(item_mission='miss'), state=None)
 async def mission_key(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
@@ -194,7 +211,7 @@ async def under_menu(call: CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='add'))
 async def under_menu(call: CallbackQuery, callback_data: dict, state: FSMContext):
     logging.info(f'call = {callback_data}')
-    await call.message.edit_text('Тут добавляется новое задание нужно вести 3 пункта необходимых для вноса задания в базу:\n1. ВЫбрать что это будет фотои ли текст и написать цифрой, текст - 1, фото - 2\n2. Текст миссии фажно не использовать " уовычки\n3. Необходимо написать количество очков за задание\n4. Кнопка назад создана для отменения отправки задания в базу, отменяет от слова совсем\nУдачи))', reply_markup=key.all_mis_back_keyboard)
+    await call.message.edit_text('Тут добавляется новое задание нужно вести 3 пункта необходимых для вноса задания в базу:\n1. Выбрать что это будет фото или текст и написать цифрой, текст - 1, фото - 2\n2. Текст миссии важно не использовать " ковычки\n3. Необходимо написать количество очков за задание\n4. Кнопка назад создана для отменения отправки задания в базу, отменяет от слова совсем\nУдачи))', reply_markup=key.all_mis_back_keyboard)
     await quests.type.set()
 
 # Отлавливаем не правильную передачу типа миссии 
@@ -207,7 +224,7 @@ async def check_photo(message: Message, state: FSMContext):
 async def load_type(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['type'] = message.text
-    await message.answer('Хорошо теперь пришлите текст задания')
+    await message.answer('Хорошо, отправьте текст задания')
     await quests.next()
 
 # Отлавливаем текст мессии
@@ -215,7 +232,7 @@ async def load_type(message: Message, state: FSMContext):
 async def load_text(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['text'] = message.text
-    await message.answer('Хорошо ведите зачисляемые очки')
+    await message.answer('Хорошо, ведите зачисляемые очки числом следующим сообщением')
     await quests.next()
 
 # Отлавливаем не правильную передачу очков за миссию
@@ -256,6 +273,13 @@ async def top_ten(call: CallbackQuery, callback_data: dict):
     await unloading_from_database()
     await bot.send_document(-1001905922253, open('result.xlsx', 'rb'))
     await call.answer()
+
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='phone'))
+async def phone(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    await unloading_from_database_answer()
+    await bot.send_document(-1001905922253, open('nomera.xlsx', 'rb'))
+    await call.answer()    
 
 # Изменяем количество очков
 @dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='write_point'))

@@ -1,7 +1,7 @@
-FROM kureed/enveroment:v1
+FROM kureed/enveroment:v3
 
 WORKDIR /bot
 
-COPY . .
+COPY ./ ./
 
-CMD [ "python3", "bot_start.py" ]
+CMD [ "python3", "/bot/bot_start.py" ]

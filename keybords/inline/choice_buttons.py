@@ -14,6 +14,12 @@ helo_keyboard = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text='Миссии', callback_data=key.helo_callback.new(item_helo='helo')),
         ],
+        [
+            InlineKeyboardButton(text='Показать все задания', callback_data=key.main_menu_callback.new(item_main_menu='show_all')),
+        ],
+        [
+            InlineKeyboardButton(text='Узнать мои баллы', callback_data=key.mission_callback.new(item_mission='my_bolls')),
+        ],
     ]
 )
 
@@ -23,7 +29,7 @@ mission_keyboard = InlineKeyboardMarkup(
             InlineKeyboardButton(text='Миссия', callback_data=key.mission_callback.new(item_mission='miss')),
         ],
         [
-            InlineKeyboardButton(text='Мои баллы', callback_data=key.mission_callback.new(item_mission='my_bolls')),
+            InlineKeyboardButton(text='Узнать мои баллы', callback_data=key.mission_callback.new(item_mission='my_bolls')),
         ],
     ]
 )
@@ -55,6 +61,9 @@ main_menu_keybord = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(text='Изменить очки участников', callback_data=key.main_menu_callback.new(item_main_menu='write_point')),
+        ],
+        [
+            InlineKeyboardButton(text='выгрузить ответы', callback_data=key.main_menu_callback.new(item_main_menu='phone')),
         ],
     ]
 )

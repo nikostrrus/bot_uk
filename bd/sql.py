@@ -19,10 +19,23 @@ async def db_start():
         last_message INTEGER)
         ''')
     
+    # Задания
+    
     cur.execute('''CREATE TABLE IF NOT EXISTS mission(
         id_mission INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT,
         data TEXT,
+        point INTEGER)
+        ''')
+    
+    # Таблица с номерами управляек
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS answer(
+        id_answer INTEGER PRIMARY KEY AUTOINCREMENT,
+        fio TEXT,
+        who TEXT,
+        addr TEXT,
+        number TEXT,
         point INTEGER)
         ''')
     
@@ -139,8 +152,17 @@ async def del_mission(text):
         cur.execute(f'DELETE FROM mission WHERE data="{text}"')
         return cur.fetchall()
 
-# Выгружает данные в ексель
+# Выгружает данные в ексель по очкам
 async def unloading_from_database():
     with sq.connect('sutrudnig.db') as con:
         df = pd.read_sql('SELECT user_id, name, deportament, point FROM employees ORDER BY point DESC', con)
         df.to_excel(r'result.xlsx', index=False)
+
+
+# Выгружает данные в ексель по очкам
+async def unloading_from_database_answer():
+    with sq.connect('sutrudnig.db') as con:
+        df = pd.read_sql('SELECT addr, fio, number, who FROM answer', con)
+        df.to_excel(r'nomera.xlsx', index=False)
+
+
