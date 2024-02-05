@@ -159,7 +159,7 @@ async def unloading_from_database():
         df.to_excel(r'result.xlsx', index=False)
 
 
-# Выгружает данные в ексель по очкам
+# Выгружает данные в ексель по ответам
 async def unloading_from_database_answer():
     with sq.connect('sutrudnig.db') as con:
         df = pd.read_sql('SELECT addr, fio, number, who FROM answer', con)
