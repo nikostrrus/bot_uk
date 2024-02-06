@@ -249,13 +249,23 @@ async def load_point(message: Message, state: FSMContext):
     await message.answer('Мисссия была добавлена')
     await state.finish()
 
-# Показать все миссии
+# Показать все миссии в админке
 @dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='show_all'))
 async def all_mission(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
     all_mis = (await get_all_mission())
     for item in all_mis:
         await bot.send_message(-1001905922253, f'{item[0]}', reply_markup=key.delete_mission_keyboards)
+    await call.answer()
+
+# показать все миссии юзеру
+
+@dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='show_all_user'))
+async def all_mission(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    all_mis = (await get_all_mission())
+    for item in all_mis:
+        await bot.send_message(message.chat.id, f'{item[0]}', reply_markup=key.delete_mission_keyboards)
     await call.answer()
 
 # Кнопка назад
@@ -322,3 +332,9 @@ async def del_mis(call: CallbackQuery, callback_data: dict):
     await call.answer()
 
 
+@dp.callback_query_handler(call_datas.user_mission_callbacks.filter(item_user='user'))
+async def del_mis(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call{callback_data}')
+    await get_all_mission()
+#   await call.message.edit_text(f'Задание удалено: {call.message.text}')
+    await call.answer()

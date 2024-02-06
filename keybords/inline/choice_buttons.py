@@ -26,7 +26,7 @@ helo_keyboard = InlineKeyboardMarkup(
 mission_keyboard = InlineKeyboardMarkup(
     inline_keyboard = [
         [
-            InlineKeyboardButton(text='Миссия', callback_data=key.mission_callback.new(item_mission='miss')),
+            InlineKeyboardButton(text='Задания', callback_data=key.user_mission_callbacks.new(item_user='user')),
         ],
         [
             InlineKeyboardButton(text='Узнать мои баллы', callback_data=key.mission_callback.new(item_mission='my_bolls')),
@@ -102,6 +102,14 @@ delete_mission_keyboards = InlineKeyboardMarkup(
     inline_keyboard = [
         [
             InlineKeyboardButton(text='Удалить', callback_data=key.delete_mission_callbacks.new(item_delete='del'))
+        ]
+    ]
+)
+
+user_mission_keyboards = InlineKeyboardMarkup(
+    inline_keyboard = [
+        [
+            InlineKeyboardButton(text='Выбрать', callback_data=key.user_mission_callbacks.new(item_user='user'))
         ]
     ]
 )
