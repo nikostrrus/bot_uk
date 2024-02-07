@@ -4,3 +4,4 @@ env
 __pycache__
 result.xlsx
 .dockerignore
+nomera.xlsx
