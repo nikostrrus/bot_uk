@@ -12,10 +12,13 @@ menu_keyboard = InlineKeyboardMarkup(
 helo_keyboard = InlineKeyboardMarkup(
     inline_keyboard = [
         [
-            InlineKeyboardButton(text='Миссии', callback_data=key.helo_callback.new(item_helo='helo')),
+            InlineKeyboardButton(text='Еженедельные Миссии', callback_data=key.helo_callback.new(item_helo='helo')),
         ],
         [
-            InlineKeyboardButton(text='Показать все задания', callback_data=key.main_menu_callback.new(item_main_menu='show_all')),
+            InlineKeyboardButton(text='Отправить контакты старшего по дому', callback_data=key.main_menu_callback.new(item_main_menu='contactAdd')),
+        ],
+        [
+            InlineKeyboardButton(text='Хочу собрать протокол', callback_data=key.main_menu_callback.new(item_main_menu='protocol')),
         ],
         [
             InlineKeyboardButton(text='Узнать мои баллы', callback_data=key.mission_callback.new(item_mission='my_bolls')),

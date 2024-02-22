@@ -283,6 +283,7 @@ async def top_ten(call: CallbackQuery, callback_data: dict):
     await bot.send_document(-1001905922253, open('result.xlsx', 'rb'))
     await call.answer()
 
+# вывод в админку номеров телефона
 @dp.callback_query_handler(call_datas.main_menu_callback.filter(item_main_menu='phone'))
 async def phone(call: CallbackQuery, callback_data: dict):
     logging.info(f'call = {callback_data}')
@@ -313,7 +314,7 @@ async def load_name_for_edit_point(message: Message, state: FSMContext):
 
 @dp.message_handler(lambda message: not message.text.isdigit(), state=ed_point.point)
 async def check_photo(message: Message, state: FSMContext):
-    await message.reply('Отправь число очков')
+    await message.reply('Отправь колличество очков за задание')
 
 # Отлавливаем текст мессии
 @dp.message_handler(state=ed_point.point)
@@ -333,8 +334,9 @@ async def del_mis(call: CallbackQuery, callback_data: dict):
 
 
 @dp.callback_query_handler(call_datas.user_mission_callbacks.filter(item_user='user'))
-async def del_mis(call: CallbackQuery, callback_data: dict):
-    logging.info(f'call{callback_data}')
-    await get_all_mission()
-#   await call.message.edit_text(f'Задание удалено: {call.message.text}')
+async def all_mission(call: CallbackQuery, callback_data: dict):
+    logging.info(f'call = {callback_data}')
+    all_mis = (await get_all_mission())
+    for item in all_mis:
+        await call.message.edit_text(f'{item[0]}', reply_markup=key.user_mission_keyboards)
     await call.answer()
